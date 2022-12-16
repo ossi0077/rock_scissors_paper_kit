@@ -21,11 +21,11 @@ int paper_btn = 4;
 int red = 6;
 int yellow = 7;
 int green = 8;
-int dly = 2000; //결과 표시 유지 시간[ms]
+int dly = 2000;  //결과 표시 유지 시간[ms]
 
 Servo Rock, Scissors, Paper;  // servo 객체 지정
-int degree0 = 0;              // 0도
-int degree90 = 90;            // 90도
+int down_degree = 0;          // 0도
+int up_degree = 90;           // 90도
 int state = 0;
 
 int btnFlg1 = 0;
@@ -73,30 +73,23 @@ int choiceRandom(int x) {
   return val;
 }
 
-void Up(int x) {
+void UpDown(int x, int y) {
   switch (x) {
     case 0:
-      Rock.write(degree90);
+      Rock.write(y);
       break;
     case 1:
-      Scissors.write(degree90);
+      Scissors.write(y);
       break;
     case 2:
-      Paper.write(degree90);
+      Paper.write(y);
       break;
-  }
-}
-
-void Down(int x) {
-  switch (x) {
-    case 0:
-      Rock.write(degree0);
+    case 3:
+      Rock.write(y);
+      Scissors.write(y);
+      Paper.write(y);
       break;
-    case 1:
-      Scissors.write(degree0);
-      break;
-    case 2:
-      Paper.write(degree0);
+    default:
       break;
   }
 }
@@ -121,6 +114,49 @@ void winLoseLED(int x) {
   }
 }
 
+void detachServo(int x) {
+  delay(450);
+  switch (x) {
+    case 0:
+      Rock.detach();
+      break;
+    case 1:
+      Scissors.detach();
+      break;
+    case 2:
+      Paper.detach();
+      break;
+    case 3:
+      Rock.detach();
+      Scissors.detach();
+      Paper.detach();
+      break;
+    default:
+      break;
+  }
+}
+
+void attachServo(int x) {
+  switch (x) {
+    case 0:
+      Rock.attach(rock_motor);
+      break;
+    case 1:
+      Scissors.attach(scissors_motor);
+      break;
+    case 2:
+      Paper.attach(paper_motor);
+      break;
+    case 3:
+      Rock.attach(rock_motor);
+      Scissors.attach(scissors_motor);
+      Paper.attach(paper_motor);
+      break;
+    default:
+      break;
+  }
+}
+
 void setup() {
   pinMode(rock_btn, INPUT_PULLUP);
   pinMode(scissors_btn, INPUT_PULLUP);
@@ -132,12 +168,10 @@ void setup() {
   digitalWrite(yellow, LOW);
   digitalWrite(green, LOW);
 
-  Rock.attach(rock_motor);
-  Scissors.attach(scissors_motor);
-  Paper.attach(paper_motor);
-  Rock.write(degree0);
-  Scissors.write(degree0);
-  Paper.write(degree0);
+  attachServo(3);
+  UpDown(3, down_degree);
+  detachServo(3);
+
   Serial.begin(9600);
   Serial.println("Serial start");
 }
@@ -145,8 +179,9 @@ void setup() {
 void loop() {
   int com = choiceRandom(3);
   if (btnChk1() == 1) {  //바위 선택한 경우
+    attachServo(com);
     Serial.println("rock btn clicked");
-    Up(com);
+    UpDown(com, up_degree);
     switch (com) {
       case 0:  // 비긴 경우
         Serial.println("Draw");
@@ -161,10 +196,12 @@ void loop() {
         winLoseLED(2);
         break;
     }
-    Down(com);
+    UpDown(com, down_degree);
+    detachServo(com);
   } else if (btnChk2() == 1) {
+    attachServo(com);
     Serial.println("scissors btn clicked");
-    Up(com);
+    UpDown(com, up_degree);
     switch (com) {
       case 0:  // 진 경우
         Serial.println("Lose");
@@ -179,10 +216,12 @@ void loop() {
         winLoseLED(1);
         break;
     }
-    Down(com);
+    UpDown(com, down_degree);
+    detachServo(com);
   } else if (btnChk3() == 1) {
+    attachServo(com);
     Serial.println("paper btn clicked");
-    Up(com);
+    UpDown(com, up_degree);
     switch (com) {
       case 0:  // 이긴 경우
         Serial.println("Win");
@@ -197,6 +236,7 @@ void loop() {
         winLoseLED(0);
         break;
     }
-    Down(com);
+    UpDown(com, down_degree);
+    detachServo(com);
   }
 }
